@@ -1,0 +1,177 @@
+<!--
+Example of a classical FPGA soft logic block with
+N = 10, K = 4, I = 22, O = 10
+BLEs consisting of a single LUT followed by a flip-flop that can be bypassed
+https://docs.verilogtorouting.org/en/latest/tutorials/arch/classic_soft_logic/
+-->
+
+<!--
+<complexblocklist> 内のコンテンツには、FPGA 内にある複合ブロックが記述される。
+複合ブロックの各タイプは、<compplexblocklist> タグ内のトップレベルの <pb_type> タグで指定
+-->
+<pb_type name="clb">
+    <!--
+    <pb_type name="string" <- 必須。pb_typeの名前。親、兄弟、子の<pb_type>に対してユニーク
+             num_pb="int"　<- 現在の階層レベルにあるこのpb_typeのインスタンス数
+             blif_model="string"  <- このpb_typeが実装可能なネットリストプリミティブを指定
+                                     Accepted values:
+                                         .input: A BLIF netlist input
+                                         .output: A BLIF netlist output
+                                         .names: A BLIF .names (LUT) primitive
+                                         .latch: A BLIF .latch (DFF) primitive
+                                         .subckt <custom_type>: A user defined black-box primitive.
+                                             For example:
+                                                 <pb_type name="my_adder" blif_model=".subckt adder"/>
+                                                 ...
+                                                 </pb_type>
+                                                 
+                                                 my_adderという名を持つpb_typeが、adderという名のブラックボックスBLIFプリミティブを実装できることを指定
+    />
+
+    最上位の複合ブロック、または複合ブロックの内部構成要素（サブブロック）を指定する。
+    どの属性が適用されるかは、<pb_type>タグが階層構造のどこに位置するかによって決まる：
+
+    - トップレベル：<complexblocklist> の子。
+    - 中級：他の<pb_type>の子。
+    - 原始的/葉っぱ：<pb_type>の子を持たない。
+    -->
+
+    <input name="I" num_pins="22" equivalent="full"/>
+    <!--
+    <input name="string"  <- 必須。input port名
+           num_pins="int"  <- 必須。input portが持つピン数
+           equivalent="{none|full}" 　<- ポートのピンが論理的に等価であるかどうかを記述。
+                                         入力の論理的等価性とは、機能を変更することなくピンの順序を入れ替えることができることを意味。
+                                         例えば、ANDゲートは入力の順番を入れ替えても正しいので、論理的に等価な入力となります。
+                                         一方、加算器はMSBとLSBを入れ替えると結果が全く違ってくるので、論理的に等価ではありません。
+                                         LUTは、論理関数（LUTマスク）を回転させてピンの入れ替えを考慮することができるため、論理的に等価であると考えられています。
+                                         none: デフォルト。論理的に等価な入力端子はありません。
+                                         full: すべての入力ピンが論理的に同等 (e.g. due to logical equivalance or a full-crossbar within the cluster)
+           is_non_clock_global="{true|false}"　　<- この入力ピンがクロックではないグローバル信号であるかどうかを記述。
+                                                    FPGA全体の非同期リセットのような信号に非常に有効です。
+                                                    これらの信号には専用の配線チャネルがあるため、FPGA の一般的なインターコネクトファブリックを使用するべきではありません。
+    />
+
+    入力ポートを定義する。
+    複数の入力ポートを記述する場合は、複数の<input>タグを使用する。
+    -->
+
+    <output name="O" num_pins="10" equivalent="instance"/>
+    <!--
+    <output name="string"  <- 必須。output port名
+            num_pins="int"  <- 必須。output portが持つピン数
+            equivalent="{none|full|instance}"  <- ポートのピンが論理的に等価であるかどうかを記述。
+                                                  none: デフォルト。論理的に等価な入力端子はありません。
+                                                  full: すべての入力ピンが論理的に同等
+                                                  instance: ブロック内のサブインスタンス（LUT/BLEなど）を交換することで、出力ピンの論理的等価性を限定的に実現できるモデル。
+    />
+
+    出力ポートを定義する。複数の出力ポートを記述する場合は、複数の<output>タグを使用します。
+    -->
+
+
+    <clock name="clk" equivalent="false"/>
+    <!--
+    <clock name="string"  <- 必須。clock名
+           num_pins="int"  <- clockのピン数
+           equivalent="{none|full}"  <- 等価性
+    />
+
+    クロックポートを記述する。
+    複数のクロックポートを記述する場合は、複数の<clock>タグを使用する。
+    上記の<input>タグに関する記述を参照
+    -->
+  
+    <pb_type name="ble" num_pb="10"> 
+        <!-- 
+        <pb_type name="clb">内にBLEブロックを10個配置
+        -->
+
+        <input name="in" num_pins="4"/>
+        <output name="out" num_pins="1"/>
+        <clock name="clk"/>
+        <!-- 
+        入力ピン数は4
+        出力ピン数は1
+        クロック入力を1つ用意
+        -->
+
+        <pb_type name="lut_4" blif_model=".names" num_pb="1" class="lut">
+          <input name="in" num_pins="4" port_class="lut_in"/>
+          <output name="out" num_pins="1" port_class="lut_out"/>
+        </pb_type>
+        <!--
+        4-LUTはBLE内に1つある
+        入力ピン数は4
+        出力ピン数は1
+        -->
+
+        <pb_type name="ff" blif_model=".latch" num_pb="1" class="flipflop">
+          <input name="D" num_pins="1" port_class="D"/>
+          <output name="Q" num_pins="1" port_class="Q"/>
+          <clock name="clk" port_class="clock"/>
+        </pb_type>
+        <!--
+        FFはBLE内に1つある
+        入力ピン数は1
+        出力ピン数は1
+        クロック入寮を1つ用意
+        -->
+
+        <!--
+        BLEは、1つのLUTと1つのフリップフロップ（FF）で構成されています。
+        これらは両方ともプリミティブです。
+        プリミティブ物理ブロックには、BLIF 入力ネットリスト内のモデル名と一致する blif_model 属性が必要であることを思い出してください。
+        LUT の場合、モデルは BLIF の .names です。FFの場合、モデルはBLIFの.latchです。
+        クラス構成は、これらが特別な（一般的な）プリミティブであることを表します。
+        -->
+    
+        <interconnect> <!-- 配線をここで書く -->
+            <direct input="lut_4.out" output="ff.D"/>
+            <!--
+            <direct name="string"  <- 配線の識別名
+                    input="string"  <- 配線の入力先
+                    output="string"  <- 配線の出力先
+            />
+
+            入力端子と出力端子の1対1マッピングを記述する。
+            -->
+
+            <direct input="ble.in" output="lut_4.in"/>
+
+            <mux input="ff.Q lut_4.out" output="ble.out"/>
+            <!--
+            <mux name="string"  <- 配線の識別名
+                 input="string"  <- MUXの入力先。スペース区切りで複数入力
+                 output="string"  <- 配線の出力先
+            />
+            -->
+
+            <direct input="ble.clk" output="ff.clk"/>
+        </interconnect>
+    </pb_type>
+  
+    <interconnect>
+        <complete input="{clb.I ble[9:0].out}" output="ble[9:0].in"/>
+        <!--
+        <complete name="string"  <- 配線の識別名
+                  input="string"  <- 入力先。スペース区切りで複数入力
+                  output="string"  <- 配線の出力先
+        />
+
+        完全接続されたクロスバー。
+        入力のどのピンも出力のどのピンにも接続可能です。
+        -->
+        
+        <complete input="clb.clk" output="ble[9:0].clk"/>
+        <direct input="ble[9:0].out" output="clb.O"/>
+    </interconnect>
+  
+    <!-- Describe complex block relation with FPGA -->
+  
+    <fc_in type="frac">0.150000</fc_in>
+    <fc_out type="frac">0.125000</fc_out>
+  
+    <pinlocations pattern="spread"/>
+
+</pb_type>
