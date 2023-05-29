@@ -174,4 +174,12 @@ https://docs.verilogtorouting.org/en/latest/tutorials/arch/classic_soft_logic/
   
     <pinlocations pattern="spread"/>
 
+    <!--
+    最後に、CLBと一般的なFPGAファブリック間の接続をモデル化します(CLBは汎用インターコネクトを使用して他のCLBやI/Oと通信することを思い出してください)。
+    CLBの特定の入力/出力ピンが接続するトラックの比率は、fc_in/fc_outで定義されます。
+    この例では、fc_inが0.15の場合、各入力ピンは、そのピンに隣接する外部-CLB配線チャネルの利用可能な配線トラックの15%に接続することになります。
+    pinlocationsタグは、CLB上のピンとロジックブロックのどの側にピンが存在するかを関連付けるために使用され、patternspreadはCLBのすべての側面にピンをラウンドロビン方式で均等に配置することに対応します。
+    この例では、CLBのピンは合計33本（入力22本、出力10本、クロック1本）なので、9本割り当てられる片側を除き、8本がCLBの全面に割り当てられる。
+    -->
+
 </pb_type>
