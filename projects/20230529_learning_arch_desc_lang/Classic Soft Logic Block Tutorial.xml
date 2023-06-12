@@ -40,7 +40,8 @@ https://docs.verilogtorouting.org/en/latest/tutorials/arch/classic_soft_logic/
     <!--
     <input name="string"  <- 必須。input port名
            num_pins="int"  <- 必須。input portが持つピン数
-           equivalent="{none|full}" 　<- ポートのピンが論理的に等価であるかどうかを記述。
+           equivalent="{none|full}" 　<- default: none
+                                         ポートのピンが論理的に等価であるかどうかを記述。
                                          入力の論理的等価性とは、機能を変更することなくピンの順序を入れ替えることができることを意味。
                                          例えば、ANDゲートは入力の順番を入れ替えても正しいので、論理的に等価な入力となります。
                                          一方、加算器はMSBとLSBを入れ替えると結果が全く違ってくるので、論理的に等価ではありません。
